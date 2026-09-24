@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # Import models from your models package
-from models import MessageLog, Document, ChunkingTable, SessionContext
+from models import MessageLog, Document, ChunkingTable, SessionContext, Hotel
 from database import AsyncSessionLocal
 from services.ai_factory import get_dynamic_embeddings
 # --- Import the booking handler ---
@@ -34,7 +34,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -155,6 +155,13 @@ async def chat_endpoint(request: ChatRequest, db: AsyncSession = Depends(get_db)
         if not session_ctx:
             # Generate a valid Guest UUID in Python
             new_guest_id = uuid.uuid4()
+            hotel_result = await db.execute(select(Hotel).order_by(Hotel.name).limit(1))
+            hotel = hotel_result.scalar_one_or_none()
+            if not hotel:
+                raise HTTPException(
+                    status_code=503,
+                    detail="No seeded hotel is available. Run the database seed first.",
+                )
             
             # Insert the Guest via raw SQL
             await db.execute(text("""
@@ -173,7 +180,7 @@ async def chat_endpoint(request: ChatRequest, db: AsyncSession = Depends(get_db)
                 VALUES (:id, :hotel_id, :guest_id, :status, :started_at)
             """), {
                 "id": sess_uuid,
-                "hotel_id": uuid.UUID("19a70845-1b5e-423a-b5c6-83a9851bbebe"),
+                "hotel_id": hotel.id,
                 "guest_id": new_guest_id,
                 "status": "active",
                 "started_at": datetime.utcnow()

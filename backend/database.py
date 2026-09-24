@@ -32,7 +32,7 @@ def normalize_database_url(database_url: str) -> str:
             if key not in unsupported_asyncpg_options
         }
         url = url.set(query=query)
-    return str(url)
+    return url.render_as_string(hide_password=False)
 
 
 DATABASE_URL = normalize_database_url(DATABASE_URL)
@@ -41,7 +41,7 @@ DATABASE_URL = normalize_database_url(DATABASE_URL)
 engine = create_async_engine(
     DATABASE_URL, 
     echo=True, 
-    connect_args={"ssl": True}
+    connect_args={"ssl": True, "statement_cache_size": 0}
 )
 
 # 5. Create the Session Factory

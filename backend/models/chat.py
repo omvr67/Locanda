@@ -11,7 +11,7 @@ class SessionContext(Base):
     __tablename__ = 'session_context'
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     hotel_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('hotel.id'))
-    guest_id: Mapped[str] = mapped_column(String(255))
+    guest_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('guest.id'))
     status: Mapped[str] = mapped_column(String(50)) # e.g., "active", "ended"
     started_at = mapped_column(DateTime, default=datetime.utcnow)
     
