@@ -19,6 +19,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
+from database import Base, normalize_database_url
 
 # this is the Alembic Config object
 config = context.config
@@ -30,16 +31,12 @@ if config.config_file_name is not None:
 # 3. Dynamically set the database URL from your .env
 db_url = os.getenv("DATABASE_URL")
 if db_url:
-    if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
-    elif db_url.startswith("postgresql://"):
-        db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    db_url = normalize_database_url(db_url)
     config.set_main_option("sqlalchemy.url", db_url)
 else:
     raise ValueError("DATABASE_URL not found. Check your .env file path.")
 
 # 4. Import your Base and models so Alembic knows what tables to create
-from database import Base
 import models
 
 target_metadata = Base.metadata
